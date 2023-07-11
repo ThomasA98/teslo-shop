@@ -1,5 +1,5 @@
 import { db, seedDatabase } from '@/database';
-import { User } from '@/models';
+import { Order, User } from '@/models';
 import Product from '@/models/Products';
 import type { NextApiRequest, NextApiResponse } from 'next'
 
@@ -20,6 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         await Product.insertMany(seedDatabase.initialData.products);
         await User.deleteMany();
         await User.insertMany(seedDatabase.initialData.users);
+        await Order.deleteMany();
         await db.disconnect();
     } catch (error) {
         await db.disconnect();

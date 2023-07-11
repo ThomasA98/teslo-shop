@@ -1,10 +1,9 @@
-import { jwt } from "@/utils";
 import { getToken } from "next-auth/jwt";
 import { NextFetchEvent, NextRequest, NextResponse } from "next/server";
 
 export async function middleware(req: NextRequest, ev: NextFetchEvent) {
 
-    const session = await getToken({
+    const session: any = await getToken({
         req,
         secret: process.env.NEXTAUTH_SECRET
     });
@@ -14,11 +13,28 @@ export async function middleware(req: NextRequest, ev: NextFetchEvent) {
         const requestedPage = req.nextUrl.pathname;
         const url = req.nextUrl.clone();
 
+        url.pathname = '/api/auth/unauthtorized';
+
+        if(req.nextUrl.pathname.startsWith('/api/admin'))
+            return NextResponse.redirect(url);
+
         url.pathname = '/auth/login';
         url.search = `p=${ requestedPage }`;
 
         return NextResponse.redirect(url);
     }
+
+    const validRole = ['admin'];
+
+    if (req.nextUrl.pathname.startsWith('/admin')
+        && !validRole.includes(session.user.role)
+    ) return NextResponse.redirect('/');
+
+    if (req.nextUrl.pathname.startsWith('/api/admin')
+        && !validRole.includes(session.user.role)
+    ) return NextResponse.redirect('/api/auth/unauthtorized');
+
+
 
     // if (req.nextUrl.pathname.startsWith('/checkout')) return checkout(req, ev);
 
@@ -50,5 +66,7 @@ export const config = {
     matcher: [
         '/checkout/address',
         '/checkout/summary',
+        '/api/admin/:path*',
+        '/admin/:path*',
     ]
 }
